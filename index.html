@@ -1,0 +1,201 @@
+# Создадим ZIP-архив с нужными файлами HTML, CSS, JS и изображениями для теста
+from zipfile import ZipFile
+import os
+
+# Папка, куда будут сохраняться файлы
+project_path = "/mnt/data/animal_quiz_site"
+os.makedirs(project_path, exist_ok=True)
+
+# HTML-файл
+html_content = """<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Səni hansı heyvana bənzədirik?</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Səni hansı heyvana bənzədirik?</h1>
+    <div id="quiz-container"></div>
+    <button id="start-btn">Sorğunu Başlat</button>
+    <button id="submit-btn" style="display:none;">Cavabları Göndər</button>
+    <div id="result" class="result"></div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
+"""
+
+# CSS-файл
+css_content = """body {
+  background: linear-gradient(to right, #f9f9f9, #e0f7fa);
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+.container {
+  max-width: 700px;
+  margin: 40px auto;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: center;
+}
+button {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #1565c0;
+}
+.question-block {
+  margin-top: 20px;
+  text-align: left;
+}
+.result {
+  margin-top: 30px;
+  font-size: 20px;
+}
+.result img {
+  max-width: 200px;
+  margin-top: 15px;
+}
+"""
+
+# JS-файл
+js_content = """const questions = [
+  {
+    q: "Sən adətən səhərlər necə oyanırsan?",
+    a: ["Enerjili", "Əsəbi", "Çətin", "Gülərək", "Heç oyanmıram"],
+    points: [5, 1, 2, 4, 0]
+  },
+  {
+    q: "Ən çox xoşladığın yemək tərzi?",
+    a: ["Şirin", "Ətli", "Bitki", "Fastfood", "Çayla nə olsa"],
+    points: [2, 4, 3, 5, 1]
+  },
+  {
+    q: "Dostların səni necə təsvir edir?",
+    a: ["Sakit", "Çılğın", "Dərrakəli", "Tənbəl", "Sirli"],
+    points: [2, 5, 3, 0, 4]
+  },
+  {
+    q: "Ən çox sevdiyin fəsl?",
+    a: ["Yay", "Qış", "Yaz", "Payız", "Fərq etməz"],
+    points: [3, 2, 5, 4, 1]
+  },
+  {
+    q: "Boş vaxtında nə edirsən?",
+    a: ["Kitab oxuyuram", "Oyun oynayıram", "Gəzintiyə çıxıram", "Yatmaq", "TikTok"],
+    points: [3, 4, 5, 1, 2]
+  },
+  {
+    q: "Ən çox sevdiyin heyvan?",
+    a: ["Pişik", "İt", "Arı", "Ayı", "Qarğa"],
+    points: [5, 4, 3, 2, 1]
+  },
+  {
+    q: "Ən güclü tərəfin?",
+    a: ["Zəka", "Səbir", "Yumor", "Cəsarət", "Empatiya"],
+    points: [5, 4, 3, 2, 1]
+  },
+  {
+    q: "Ən zəif tərəfin?",
+    a: ["Utancaqlıq", "Tənbəllik", "Qeyri-ciddilik", "Qərarsızlıq", "Tələskənlik"],
+    points: [1, 0, 2, 3, 4]
+  },
+  {
+    q: "Səni bir sözlə təsvir et:",
+    a: ["Lider", "Gülməli", "Sirli", "Rahat", "Çətin"],
+    points: [4, 3, 2, 5, 1]
+  },
+  {
+    q: "Əgər bir heyvan olsaydın, hansını seçərdin?",
+    a: ["Ayı", "Panda", "Pişik", "Arı", "Qarğa"],
+    points: [2, 5, 4, 3, 1]
+  }
+];
+
+const results = [
+  { min: 0, max: 15, name: "Qarğa", image: "crow.jpg", msg: "Sən qarğasan — ağıllı və bir az tək." },
+  { min: 16, max: 25, name: "Arı", image: "bee.jpg", msg: "Sən arısan — çalışqan və sosial." },
+  { min: 26, max: 35, name: "Pişik", image: "cat.jpg", msg: "Sən pişiksən — rahat və müstəqil." },
+  { min: 36, max: 44, name: "Panda", image: "panda.jpg", msg: "Sən pandasən — şirin və dinc." },
+  { min: 45, max: 50, name: "Ayı", image: "bear.jpg", msg: "Sən ayısan — güclü və səbirli." },
+  { min: 51, max: 60, name: "Bahar", image: "bahar.jpg", msg: "Sən Baharsan... və bu çox qəribədi." }
+];
+
+document.getElementById("start-btn").onclick = function () {
+  const quiz = document.getElementById("quiz-container");
+  quiz.innerHTML = "";
+  questions.forEach((item, index) => {
+    const div = document.createElement("div");
+    div.className = "question-block";
+    div.innerHTML = "<h3>" + (index + 1) + ". " + item.q + "</h3>";
+    item.a.forEach((ans, i) => {
+      div.innerHTML += `
+        <label><input type="radio" name="q${index}" value="${item.points[i]}"> ${ans}</label><br/>
+      `;
+    });
+    quiz.appendChild(div);
+  });
+  document.getElementById("start-btn").style.display = "none";
+  document.getElementById("submit-btn").style.display = "inline-block";
+};
+
+document.getElementById("submit-btn").onclick = function () {
+  let total = 0;
+  for (let i = 0; i < questions.length; i++) {
+    const radios = document.getElementsByName("q" + i);
+    let answered = false;
+    for (let radio of radios) {
+      if (radio.checked) {
+        total += parseInt(radio.value);
+        answered = true;
+        break;
+      }
+    }
+    if (!answered) {
+      alert("Zəhmət olmasa bütün sualları cavablandır.");
+      return;
+    }
+  }
+
+  let resultData = results.find(r => total >= r.min && total <= r.max);
+  const res = document.getElementById("result");
+  res.innerHTML = `<h2>Nəticə: ${resultData.name}</h2><p>${resultData.msg}</p><img src="${resultData.image}" alt="${resultData.name}">`;
+};
+"""
+
+# Изображения (временно создадим заглушки с названиями)
+image_names = ["bear.jpg", "panda.jpg", "cat.jpg", "bee.jpg", "crow.jpg", "bahar.jpg"]
+for name in image_names:
+    with open(f"{project_path}/{name}", "wb") as f:
+        f.write(b"placeholder")
+
+# Сохраняем HTML, CSS и JS файлы
+with open(f"{project_path}/index.html", "w") as f:
+    f.write(html_content)
+with open(f"{project_path}/style.css", "w") as f:
+    f.write(css_content)
+with open(f"{project_path}/script.js", "w") as f:
+    f.write(js_content)
+
+# Архивируем всё в ZIP
+zip_path = "/mnt/data/animal_quiz_site.zip"
+with ZipFile(zip_path, "w") as zipf:
+    for root, _, files in os.walk(project_path):
+        for file in files:
+            full_path = os.path.join(root, file)
+            arcname = os.path.relpath(full_path, project_path)
+            zipf.write(full_path, arcname)
+
+zip_path
